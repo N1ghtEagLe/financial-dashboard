@@ -124,7 +124,7 @@ export default function FinancialDashboard() {
     return (
       <div className="flex flex-col">
         <div className="border-2 border-gray-600 rounded-lg overflow-hidden shadow-xl">
-          <table style={{ width: '50%', tableLayout: 'fixed', margin: '0 auto' }} className="financial-table">
+          <table className="financial-table">
             <thead className="bg-black">
               <tr>
                 <th className="w-1/5 px-3 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
@@ -269,7 +269,7 @@ export default function FinancialDashboard() {
             Summary by Category
           </button>
         </div>
-        <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+        <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden w-fit mx-auto">
           <div className="px-6 py-4">
             <h3 className="text-xl font-semibold text-gray-100">
               {viewMode === 'team' ? 'Team Summary' : 'Category Summary'}
