@@ -1,12 +1,4 @@
-import '@/styles/globals.css'
-import { Inter } from 'next/font/google'
-
-const inter = Inter({ subsets: ['latin'] })
-
-export const metadata = {
-  title: 'Financial Dashboard',
-  description: 'A modern financial dashboard for your startup',
-}
+import './globals.css'
 
 export default function RootLayout({
   children,
@@ -15,7 +7,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body className="bg-black">
+        {children}
+      </body>
     </html>
   )
 }

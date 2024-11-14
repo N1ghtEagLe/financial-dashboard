@@ -1,6 +1,8 @@
 'use client'
+import '../globals.css'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import FileUpload from './FileUpload'
 
 type SummaryData = {
   Team: string
@@ -61,82 +63,109 @@ export default function FinancialDashboard() {
   const [summaryData, setSummaryData] = useState<SummaryData[]>(mockSummaryByTeam)
   const [selectedTransactions, setSelectedTransactions] = useState<RawTransaction[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    setSummaryData(viewMode === 'team' ? mockSummaryByTeam : mockSummaryByCategory)
-  }, [viewMode])
+  const handleUploadSuccess = (data: any) => {
+    // Update the state with real data
+    setSummaryData(viewMode === 'team' ? data.teamSummary : data.categorySummary)
+    setError(null)
+  }
+
+  const handleUploadError = (error: string) => {
+    setError(error)
+  }
 
   const handleCellClick = (team: string, category: string) => {
+    console.log('Cell clicked:', { team, category })
     const key = `${team},${category}`
+    console.log('Looking up transactions for key:', key)
     const transactions = mockRawDataMapping[key] || []
+    console.log('Found transactions:', transactions)
     setSelectedTransactions(transactions)
     setIsModalOpen(true)
   }
 
-  const renderSummaryTable = (data: SummaryData[]) => (
-    <table className="min-w-full divide-y divide-gray-700 rounded-lg overflow-hidden">
-      <thead className="bg-gray-800">
-        <tr>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            {viewMode === 'team' ? 'Team' : 'Category'}
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            {viewMode === 'team' ? 'Category' : 'Team'}
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            USD
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            GBP
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-            Total USD
-          </th>
-        </tr>
-      </thead>
-      <tbody className="bg-gray-900 divide-y divide-gray-700">
-        {data.map((row, index) => (
-          <tr key={index}>
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">
-              {row[viewMode === 'team' ? 'Team' : 'Category']}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-              {row[viewMode === 'team' ? 'Category' : 'Team']}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-              <button
-                onClick={() => handleCellClick(row.Team, row.Category)}
-                className="text-blue-400 hover:text-blue-300 hover:underline"
-              >
-                ${row.USD.toFixed(2)}
-              </button>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-              <button
-                onClick={() => handleCellClick(row.Team, row.Category)}
-                className="text-blue-400 hover:text-blue-300 hover:underline"
-              >
-                £{row.GBP.toFixed(2)}
-              </button>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-              <button
-                onClick={() => handleCellClick(row.Team, row.Category)}
-                className="text-blue-400 hover:text-blue-300 hover:underline"
-              >
-                ${row['Total USD'].toFixed(2)}
-              </button>
-            </td>
+  const renderSummaryTable = (data: SummaryData[]) => {
+    console.log('Rendering summary table with data:', data)
+    return (
+      <table className="min-w-full divide-y divide-gray-700 rounded-lg overflow-hidden">
+        <thead className="bg-gray-800">
+          <tr>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+              {viewMode === 'team' ? 'Team' : 'Category'}
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+              {viewMode === 'team' ? 'Category' : 'Team'}
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+              USD
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+              GBP
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+              Total USD
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-  )
+        </thead>
+        <tbody className="bg-gray-900 divide-y divide-gray-700">
+          {data.map((row, index) => (
+            <tr key={index}>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">
+                {row[viewMode === 'team' ? 'Team' : 'Category']}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                {row[viewMode === 'team' ? 'Category' : 'Team']}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                <button
+                  onClick={() => handleCellClick(row.Team, row.Category)}
+                  className="text-blue-400 hover:text-blue-300 hover:underline"
+                >
+                  ${row.USD.toFixed(2)}
+                </button>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                <button
+                  onClick={() => handleCellClick(row.Team, row.Category)}
+                  className="text-blue-400 hover:text-blue-300 hover:underline"
+                >
+                  £{row.GBP.toFixed(2)}
+                </button>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                <button
+                  onClick={() => handleCellClick(row.Team, row.Category)}
+                  className="text-blue-400 hover:text-blue-300 hover:underline"
+                >
+                  ${row['Total USD'].toFixed(2)}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )
+  }
+
+  console.log('FinancialDashboard rendering with viewMode:', viewMode)
 
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="container mx-auto p-4">
         <h1 className="text-3xl font-bold mb-6">Financial Dashboard</h1>
+        
+        <FileUpload 
+          onUploadSuccess={handleUploadSuccess}
+          onUploadError={handleUploadError}
+        />
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-300">
+            {error}
+          </div>
+        )}
+
         <div className="mb-6">
           <button
             onClick={() => setViewMode('team')}
