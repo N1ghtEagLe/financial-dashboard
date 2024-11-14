@@ -185,6 +185,13 @@ async def process_file(
             content={"error": str(e)}
         )
 
+@app.get("/")
+async def read_root(api_key: str = Depends(verify_api_key)):
+    return {"status": "healthy", "message": "Python service is running"}
+
+# Add this handler for Vercel
+handler = app
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

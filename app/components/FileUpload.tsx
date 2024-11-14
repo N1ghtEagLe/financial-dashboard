@@ -15,6 +15,9 @@ export default function FileUpload({ onUploadSuccess, onUploadError }: {
     const file = event.target.files?.[0]
     if (!file) return
 
+    console.log('Starting upload with API URL:', API_URL)
+    console.log('API Key exists:', !!API_KEY)
+
     setIsUploading(true)
     const formData = new FormData()
     formData.append('file', file)
@@ -28,11 +31,16 @@ export default function FileUpload({ onUploadSuccess, onUploadError }: {
         body: formData,
       })
 
+      console.log('Response status:', response.status)
+
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`)
+        const errorData = await response.json()
+        console.error('Upload error:', errorData)
+        throw new Error(errorData.error || 'Upload failed')
       }
 
       const data = await response.json()
+      console.log('Upload success:', data)
       onUploadSuccess(data)
     } catch (error) {
       console.error('Upload error:', error)
