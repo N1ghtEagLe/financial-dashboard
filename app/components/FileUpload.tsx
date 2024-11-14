@@ -21,7 +21,8 @@ export default function FileUpload({ onUploadSuccess, onUploadError }: {
     formData.append('file', file)
 
     try {
-      const response = await fetch(`${API_URL}/process`, {
+      const baseUrl = API_URL?.replace(/\/$/, '')
+      const response = await fetch(`${baseUrl}/process`, {
         method: 'POST',
         headers: {
           'X-API-Key': API_KEY || '',

@@ -8,11 +8,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Dict, List, Any
 
-app = FastAPI()
-
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+# Log startup
+logger.info("Starting application...")
+
+app = FastAPI()
 
 # Add API key verification function
 async def verify_api_key(x_api_key: str = Header(None)):
@@ -21,7 +24,7 @@ async def verify_api_key(x_api_key: str = Header(None)):
         raise HTTPException(status_code=403, detail="Invalid API key")
     return x_api_key
 
-# Update CORS middleware
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,57 +32,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.post("/process")
-async def process_file(file: UploadFile, api_key: str = Depends(verify_api_key)):
-    try:
-        logger.info(f"Processing file: {file.filename}")
-        
-        # Verify file type
-        if not file.filename.endswith(('.xlsx', '.xls')):
-            logger.error(f"Invalid file type: {file.filename}")
-            return JSONResponse(
-                status_code=400,
-                content={"error": "Invalid file type. Please upload an Excel file."}
-            )
-
-        # Read file contents
-        contents = await file.read()
-        logger.info(f"File size: {len(contents)} bytes")
-
-        # Process the file
-        try:
-            df = pd.read_excel(io.BytesIO(contents))
-            logger.info(f"Successfully read Excel file with {len(df)} rows")
-            
-            # Your existing processing logic here
-            # ...
-
-            return JSONResponse(
-                content={"message": "File processed successfully", "rows": len(df)}
-            )
-
-        except Exception as e:
-            logger.error(f"Error processing file: {str(e)}")
-            return JSONResponse(
-                status_code=400,
-                content={"error": f"Error processing file: {str(e)}"}
-            )
-
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Server error: {str(e)}"}
-        )
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    logger.error(f"Global error: {str(exc)}")
-    return JSONResponse(
-        status_code=500,
-        content={"error": str(exc)}
-    )
 
 def process_excel_data(file_contents: bytes) -> Dict[str, Any]:
     try:
@@ -172,13 +124,51 @@ def process_excel_data(file_contents: bytes) -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.post("/process")
+async def process_file(file: UploadFile, api_key: str = Depends(verify_api_key)):
+    try:
+        logger.info(f"Processing file: {file.filename}")
+        
+        # Verify file type
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            logger.error(f"Invalid file type: {file.filename}")
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Invalid file type. Please upload an Excel file."}
+            )
+
+        # Read file contents
+        contents = await file.read()
+        logger.info(f"File size: {len(contents)} bytes")
+
+        # Process the file
+        try:
+            result = process_excel_data(contents)
+            logger.info("File processed successfully")
+            return JSONResponse(content=result)
+
+        except Exception as e:
+            logger.error(f"Error processing file: {str(e)}")
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"Error processing file: {str(e)}"}
+            )
+
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Server error: {str(e)}"}
+        )
+
 @app.get("/")
-async def read_root(api_key: str = Depends(verify_api_key)):
-    return {"status": "healthy", "message": "Python service is running"}
+async def read_root():
+    logger.info("Health check endpoint called")
+    return {
+        "status": "healthy",
+        "port": os.environ.get("PORT"),
+        "environment": os.environ.get("RAILWAY_ENVIRONMENT")
+    }
 
 # Add this handler for Vercel
 handler = app
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
