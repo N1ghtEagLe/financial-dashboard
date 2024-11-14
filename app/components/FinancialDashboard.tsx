@@ -320,18 +320,17 @@ export default function FinancialDashboard() {
         >
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div 
-              className="fixed inset-0 bg-gray-900 opacity-100 transition-opacity" 
+              className="fixed inset-0 bg-black opacity-75 transition-opacity" 
               aria-hidden="true"
               style={{ position: 'fixed', zIndex: 40 }}
             ></div>
             
-            <div className="inline-block align-middle bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-4xl sm:w-full relative" 
+            <div className="inline-block align-middle bg-black rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-4xl sm:w-full relative" 
                  style={{ 
                    zIndex: 50,
-                   backgroundColor: '#1f2937',
                    boxShadow: '0 0 20px rgba(0, 0, 0, 0.5)'
                  }}>
-              <div className="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div className="bg-black px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
                     <div className="flex justify-between items-center mb-4">
@@ -350,7 +349,7 @@ export default function FinancialDashboard() {
                     </div>
                     <div className="mt-2 max-h-[70vh] overflow-auto">
                       <table className="min-w-full divide-y divide-gray-700">
-                        <thead className="bg-gray-900">
+                        <thead className="bg-black">
                           <tr>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
@@ -360,7 +359,7 @@ export default function FinancialDashboard() {
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
                           </tr>
                         </thead>
-                        <tbody className="bg-gray-800 divide-y divide-gray-700">
+                        <tbody className="bg-black divide-y divide-gray-700">
                           {selectedTransactions.map((transaction, index) => (
                             <tr key={index}>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Date}</td>
@@ -379,7 +378,7 @@ export default function FinancialDashboard() {
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-900 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <div className="bg-black px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
                   type="button"
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import pandas as pd
@@ -6,6 +6,7 @@ from typing import Dict, List, Any
 import io
 import logging
 import numpy as np
+import os
 
 app = FastAPI()
 
@@ -13,10 +14,16 @@ app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Add CORS middleware
+# Add API key verification function
+async def verify_api_key(x_api_key: str = Header(None)):
+    if x_api_key != os.environ.get('API_KEY'):
+        raise HTTPException(status_code=403, detail="Invalid API key")
+    return x_api_key
+
+# Update CORS middleware to allow all origins (you can restrict this later)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Your Next.js app URL
+    allow_origins=["*"],  # Update this with your frontend URL once deployed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -122,7 +129,10 @@ def process_excel_data(file_contents: bytes) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/process")
-async def process_file(file: UploadFile):
+async def process_file(
+    file: UploadFile,
+    api_key: str = Depends(verify_api_key)
+):
     try:
         logger.info(f"Received file: {file.filename}")
         
