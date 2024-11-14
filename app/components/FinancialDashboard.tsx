@@ -196,6 +196,9 @@ export default function FinancialDashboard() {
                       </td>
                     </tr>
                   ))}
+                  {/* Add two blank rows between groups */}
+                  <tr><td colSpan={5}>&nbsp;</td></tr>
+                  <tr><td colSpan={5}>&nbsp;</td></tr>
                 </React.Fragment>
               ))}
               {/* Grand Total */}
