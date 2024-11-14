@@ -15,18 +15,17 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Update CORS middleware with specific origins
+# Update CORS middleware to allow all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://financial-dashboard-xi-neon.vercel.app",  # Production
-        "http://localhost:3000",  # Local development
-    ],
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
 )
+
+port = os.getenv("PORT", "8080")
+logger.info(f"Starting server on port: {port}")
 
 def create_summary_data(df: pd.DataFrame, group_by_first: str, group_by_second: str) -> List[Dict]:
     # Group by specified columns and sum the amounts
@@ -143,9 +142,11 @@ async def process_file(file: UploadFile):
             content={"error": f"Error processing file: {str(e)}"}
         )
 
+# Add a health check endpoint
 @app.get("/")
-async def read_root():
-    return {"status": "healthy"}
+async def root():
+    return {"status": "ok"}
 
-# Add this handler for Railway
-handler = app
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "port": port}
