@@ -17,17 +17,61 @@ logger = logging.getLogger(__name__)
 # Add API key verification function
 async def verify_api_key(x_api_key: str = Header(None)):
     if x_api_key != os.environ.get('API_KEY'):
+        logger.error(f"Invalid API key received: {x_api_key}")
         raise HTTPException(status_code=403, detail="Invalid API key")
     return x_api_key
 
-# Update CORS middleware to allow all origins (you can restrict this later)
+# Update CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update this with your frontend URL once deployed
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.post("/process")
+async def process_file(file: UploadFile, api_key: str = Depends(verify_api_key)):
+    try:
+        logger.info(f"Processing file: {file.filename}")
+        
+        # Verify file type
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            logger.error(f"Invalid file type: {file.filename}")
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Invalid file type. Please upload an Excel file."}
+            )
+
+        # Read file contents
+        contents = await file.read()
+        logger.info(f"File size: {len(contents)} bytes")
+
+        # Process the file
+        try:
+            df = pd.read_excel(io.BytesIO(contents))
+            logger.info(f"Successfully read Excel file with {len(df)} rows")
+            
+            # Your existing processing logic here
+            # ...
+
+            return JSONResponse(
+                content={"message": "File processed successfully", "rows": len(df)}
+            )
+
+        except Exception as e:
+            logger.error(f"Error processing file: {str(e)}")
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"Error processing file: {str(e)}"}
+            )
+
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Server error: {str(e)}"}
+        )
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
@@ -127,63 +171,6 @@ def process_excel_data(file_contents: bytes) -> Dict[str, Any]:
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/process")
-async def process_file(
-    file: UploadFile,
-    api_key: str = Depends(verify_api_key)
-):
-    try:
-        logger.info(f"Received file: {file.filename}")
-        
-        if not file.filename.endswith('.xlsx'):
-            logger.error("Invalid file type")
-            return JSONResponse(
-                status_code=400,
-                content={"error": "Invalid file type. Please upload an Excel (.xlsx) file"}
-            )
-
-        contents = await file.read()
-        logger.info(f"File size: {len(contents)} bytes")
-
-        # Try to read the Excel file
-        try:
-            df = pd.read_excel(io.BytesIO(contents))
-            logger.info(f"Successfully read Excel file with {len(df)} rows")
-        except Exception as e:
-            logger.error(f"Error reading Excel file: {str(e)}")
-            return JSONResponse(
-                status_code=400,
-                content={"error": f"Error reading Excel file: {str(e)}"}
-            )
-
-        # Verify required columns
-        required_columns = ['Team', 'Category', 'Amount', 'Currency']
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        if missing_columns:
-            logger.error(f"Missing required columns: {missing_columns}")
-            return JSONResponse(
-                status_code=400,
-                content={"error": f"Missing required columns: {', '.join(missing_columns)}"}
-            )
-
-        # Process the data
-        try:
-            result = process_excel_data(contents)
-            logger.info("Successfully processed file")
-            return result
-        except Exception as e:
-            logger.error(f"Error processing file: {str(e)}")
-            return JSONResponse(
-                status_code=400,
-                content={"error": str(e)}
-            )
-    except Exception as e:
-        logger.error(f"Global error: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)}
-        )
 
 @app.get("/")
 async def read_root(api_key: str = Depends(verify_api_key)):
