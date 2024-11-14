@@ -15,10 +15,7 @@ export default function FileUpload({ onUploadSuccess, onUploadError }: {
     const file = event.target.files?.[0]
     if (!file) return
 
-    console.log('Starting upload...')
-    console.log('API URL:', API_URL)
-    console.log('File name:', file.name)
-
+    console.log('Starting upload to:', API_URL)
     setIsUploading(true)
     const formData = new FormData()
     formData.append('file', file)
@@ -33,29 +30,16 @@ export default function FileUpload({ onUploadSuccess, onUploadError }: {
       })
 
       console.log('Response status:', response.status)
-      
-      // Log the raw response text for debugging
-      const responseText = await response.text()
-      console.log('Raw response:', responseText)
-
-      // Try to parse the response as JSON
-      let data
-      try {
-        data = JSON.parse(responseText)
-      } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError)
-        throw new Error('Invalid response from server')
-      }
 
       if (!response.ok) {
-        console.error('Error response:', data)
-        throw new Error(data.error || 'Upload failed')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Upload failed')
       }
 
-      console.log('Success response:', data)
+      const data = await response.json()
       onUploadSuccess(data)
     } catch (error) {
-      console.error('Upload error details:', error)
+      console.error('Upload error:', error)
       onUploadError(error instanceof Error ? error.message : 'Upload failed')
     } finally {
       setIsUploading(false)
