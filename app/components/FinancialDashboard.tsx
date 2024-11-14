@@ -269,7 +269,7 @@ export default function FinancialDashboard() {
             Summary by Category
           </button>
         </div>
-        <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden w-fit mx-auto">
+        <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden w-fit">
           <div className="px-6 py-4">
             <h3 className="text-xl font-semibold text-gray-100">
               {viewMode === 'team' ? 'Team Summary' : 'Category Summary'}
