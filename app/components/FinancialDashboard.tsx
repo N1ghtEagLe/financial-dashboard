@@ -106,7 +106,6 @@ export default function FinancialDashboard() {
   const renderSummaryTable = (data: SummaryData[]) => {
     // Group the data by primary key (Team or Category)
     const groupedData: { [key: string]: SummaryData[] } = {}
-    let currentGroup = ''
     
     data.forEach(row => {
       const primaryKey = viewMode === 'team' ? row.Team : row.Category
@@ -124,36 +123,40 @@ export default function FinancialDashboard() {
 
     return (
       <div className="flex flex-col">
-        {Object.entries(groupedData).map(([groupName, rows]) => (
-          <div 
-            key={groupName}
-            className="mb-16"
-          >
-            <div className="border-2 border-gray-600 rounded-lg overflow-hidden shadow-xl">
-              <table className="min-w-full divide-y divide-gray-700">
-                <thead className="bg-gray-900">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      {viewMode === 'team' ? 'Team' : 'Category'}
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      {viewMode === 'team' ? 'Category' : 'Team'}
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      USD
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      GBP
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Total USD
-                    </th>
+        <div className="border-2 border-gray-600 rounded-lg overflow-hidden shadow-xl">
+          <table className="min-w-full divide-y divide-gray-700 table-fixed">
+            <thead className="bg-gray-900">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/5">
+                  {viewMode === 'team' ? 'Team' : 'Category'}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/5">
+                  {viewMode === 'team' ? 'Category' : 'Team'}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/5">
+                  USD
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/5">
+                  GBP
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/5">
+                  Total USD
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-700 bg-gray-800">
+              {Object.entries(groupedData).map(([groupName, rows]) => (
+                <React.Fragment key={groupName}>
+                  {/* Group Header */}
+                  <tr className="bg-gray-700">
+                    <td colSpan={5} className="px-6 py-2 font-semibold text-gray-200">
+                      {groupName.toUpperCase()}
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700 bg-gray-800">
+                  {/* Group Rows */}
                   {rows.map((row, index) => (
                     <tr 
-                      key={index}
+                      key={`${groupName}-${index}`}
                       className={`
                         ${row[viewMode === 'team' ? 'Category' : 'Team'] === 'TOTAL' 
                           ? 'bg-gray-900 font-semibold' 
@@ -161,13 +164,13 @@ export default function FinancialDashboard() {
                         }
                       `}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 w-1/5">
                         {viewMode === 'team' ? row.Team : row.Category}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
                         {viewMode === 'team' ? row.Category : row.Team}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
                         <button
                           onClick={() => handleCellClick(row.Team, row.Category)}
                           className="text-blue-400 hover:text-blue-300 hover:underline"
@@ -175,7 +178,7 @@ export default function FinancialDashboard() {
                           ${Math.round(row.USD)}
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
                         <button
                           onClick={() => handleCellClick(row.Team, row.Category)}
                           className="text-blue-400 hover:text-blue-300 hover:underline"
@@ -183,7 +186,7 @@ export default function FinancialDashboard() {
                           £{Math.round(row.GBP)}
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
                         <button
                           onClick={() => handleCellClick(row.Team, row.Category)}
                           className="text-blue-400 hover:text-blue-300 hover:underline"
@@ -193,38 +196,31 @@ export default function FinancialDashboard() {
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ))}
-
-        {/* Grand Total */}
-        {grandTotal && (
-          <div className="border-2 border-gray-500 rounded-lg overflow-hidden shadow-xl bg-gray-900">
-            <table className="min-w-full">
-              <tbody>
-                <tr className="font-bold">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                </React.Fragment>
+              ))}
+              {/* Grand Total */}
+              {grandTotal && (
+                <tr className="font-bold bg-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100 w-1/5">
                     {grandTotal[viewMode === 'team' ? 'Team' : 'Category']}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
                     {grandTotal[viewMode === 'team' ? 'Category' : 'Team']}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
                     ${Math.round(grandTotal.USD)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
                     £{Math.round(grandTotal.GBP)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
                     ${Math.round(grandTotal['Total USD'])}
                   </td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     )
   }
