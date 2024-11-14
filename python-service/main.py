@@ -88,33 +88,77 @@ def process_excel_data(file_contents: bytes) -> Dict[str, Any]:
         df = pd.read_excel(io.BytesIO(file_contents))
         logger.info(f"Successfully read Excel file with {len(df)} rows")
         
+        # Clean column names (remove extra spaces)
+        df.columns = df.columns.str.strip()
+        
         # Replace NaN values with None
         df = df.replace({np.nan: None})
         
-        # Strip whitespace from relevant columns
-        df['Team'] = df['Team'].str.strip()
-        df['Category'] = df['Category'].str.strip()
-        df['Currency'] = df['Currency'].str.strip()
+        # Handle date conversion with specific format
+        if 'Date' in df.columns:
+            try:
+                # First convert any existing datetime objects to string
+                if df['Date'].dtype == 'datetime64[ns]':
+                    df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+                else:
+                    # Try to parse as DD-MM-YYYY
+                    df['Date'] = pd.to_datetime(df['Date'], format='%d-%m-%Y').dt.strftime('%Y-%m-%d')
+            except Exception as e:
+                logger.error(f"Date conversion error: {str(e)}")
+                # If conversion fails, try to convert to string
+                df['Date'] = df['Date'].astype(str)
         
-        # Remove rows where Team or Category is blank
-        df = df.dropna(subset=['Team', 'Category'])
+        # Strip whitespace from string columns
+        for col in ['Team', 'Category', 'Currency', 'Description']:
+            if col in df.columns:
+                df[col] = df[col].str.strip()
         
-        # Create separate columns for USD and GBP amounts
+        # Remove rows where Team or Category is blank or whitespace-only
+        df = df[
+            (df['Team'].notna()) & (df['Team'].str.strip() != '') &
+            (df['Category'].notna()) & (df['Category'].str.strip() != '')
+        ]
+        
+        logger.info(f"After removing blank Team/Category rows: {len(df)} rows")
+        
+        # Create separate columns for USD and GBP amounts (handling negative values)
         df['USD'] = df.apply(lambda x: float(x['Amount']) if x['Currency'] == 'USD' else 0, axis=1)
         df['GBP'] = df.apply(lambda x: float(x['Amount']) if x['Currency'] == 'GBP' else 0, axis=1)
 
-        # Create summaries
+        # Convert DataFrame to dict before creating summaries
+        df_dict = df.to_dict('records')
+        
+        # Ensure all values are JSON serializable
+        for row in df_dict:
+            for key, value in row.items():
+                if pd.isna(value):
+                    row[key] = None
+                elif isinstance(value, pd.Timestamp):
+                    row[key] = value.strftime('%Y-%m-%d')
+                elif isinstance(value, (np.int64, np.float64)):
+                    row[key] = float(value)
+
+        # Create summaries using the processed data
+        df = pd.DataFrame(df_dict)
         team_summary = create_summary_data(df, 'Team', 'Category')
         category_summary = create_summary_data(df, 'Category', 'Team')
         
-        # Prepare raw transactions
-        raw_transactions = df.to_dict('records')
-        
-        return {
+        result = {
             "teamSummary": team_summary,
             "categorySummary": category_summary,
-            "rawTransactions": raw_transactions
+            "rawTransactions": df_dict
         }
+        
+        # Verify JSON serialization before returning
+        try:
+            import json
+            json.dumps(result)  # Test if result is JSON serializable
+        except TypeError as e:
+            logger.error(f"JSON serialization error: {str(e)}")
+            raise HTTPException(status_code=400, detail="Data contains non-serializable values")
+        
+        logger.info("Data processed successfully")
+        return result
         
     except Exception as e:
         logger.error(f"Error processing Excel: {str(e)}")
