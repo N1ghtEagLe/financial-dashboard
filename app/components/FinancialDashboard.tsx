@@ -80,17 +80,37 @@ export default function FinancialDashboard() {
     setError(error)
   }
 
-  const handleCellClick = (team: string, category: string) => {
-    console.log('Cell clicked:', { team, category })
-    
+  const handleCellClick = (team: string, category: string, currencyType: string) => {
+    console.log('Cell clicked:', { team, category, currencyType })
+
     const filteredTransactions = rawTransactions.filter(transaction => {
+      // Handle 'GRAND TOTAL' row
       if (team === 'GRAND TOTAL') {
-        return true
+        if (currencyType === 'Total USD') {
+          return true // Include all transactions
+        } else {
+          return transaction.Currency === currencyType
+        }
       }
+
+      // Handle 'TOTAL' rows
       if (category === 'TOTAL') {
-        return transaction.Team === team
+        const matchTeam = transaction.Team === team
+        if (currencyType === 'Total USD') {
+          return matchTeam
+        } else {
+          return matchTeam && transaction.Currency === currencyType
+        }
       }
-      return transaction.Team === team && transaction.Category === category
+
+      // Regular rows
+      const matchTeam = transaction.Team === team
+      const matchCategory = transaction.Category === category
+      if (currencyType === 'Total USD') {
+        return matchTeam && matchCategory
+      } else {
+        return matchTeam && matchCategory && transaction.Currency === currencyType
+      }
     })
 
     console.log('Filtered transactions:', filteredTransactions)
@@ -124,7 +144,7 @@ export default function FinancialDashboard() {
     return (
       <div className="flex flex-col">
         <div className="border-2 border-gray-600 rounded-lg overflow-hidden shadow-xl">
-          <table className="financial-table">
+          <table className="financial-table w-full">
             <thead className="bg-black">
               <tr>
                 <th className="w-1/5 px-3 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
@@ -173,7 +193,7 @@ export default function FinancialDashboard() {
                       </td>
                       <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
                         <button
-                          onClick={() => handleCellClick(row.Team, row.Category)}
+                          onClick={() => handleCellClick(row.Team, row.Category, 'USD')}
                           className="text-white hover:text-blue-300 hover:underline bg-transparent"
                         >
                           ${Math.round(row.USD).toLocaleString()}
@@ -181,7 +201,7 @@ export default function FinancialDashboard() {
                       </td>
                       <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
                         <button
-                          onClick={() => handleCellClick(row.Team, row.Category)}
+                          onClick={() => handleCellClick(row.Team, row.Category, 'GBP')}
                           className="text-white hover:text-blue-300 hover:underline bg-transparent"
                         >
                           £{Math.round(row.GBP).toLocaleString()}
@@ -189,7 +209,7 @@ export default function FinancialDashboard() {
                       </td>
                       <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
                         <button
-                          onClick={() => handleCellClick(row.Team, row.Category)}
+                          onClick={() => handleCellClick(row.Team, row.Category, 'Total USD')}
                           className="text-white hover:text-blue-300 hover:underline bg-transparent"
                         >
                           ${Math.round(row['Total USD']).toLocaleString()}
