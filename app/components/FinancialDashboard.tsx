@@ -124,32 +124,32 @@ export default function FinancialDashboard() {
     return (
       <div className="flex flex-col">
         <div className="border-2 border-gray-600 rounded-lg overflow-hidden shadow-xl">
-          <table className="min-w-full divide-y divide-gray-700 table-fixed">
-            <thead className="bg-gray-900">
+          <table style={{ width: '100%', tableLayout: 'fixed' }} className="financial-table">
+            <thead className="bg-black">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/5">
+                <th className="w-1/5 px-6 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
                   {viewMode === 'team' ? 'Team' : 'Category'}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/5">
+                <th className="w-1/5 px-6 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
                   {viewMode === 'team' ? 'Category' : 'Team'}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/5">
+                <th className="w-1/5 px-6 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
                   USD
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/5">
+                <th className="w-1/5 px-6 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
                   GBP
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/5">
+                <th className="w-1/5 px-6 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
                   Total USD
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700 bg-gray-800">
+            <tbody className="divide-y divide-gray-700 bg-black">
               {Object.entries(groupedData).map(([groupName, rows]) => (
                 <React.Fragment key={groupName}>
                   {/* Group Header */}
-                  <tr className="bg-gray-700">
-                    <td colSpan={5} className="px-6 py-2 font-semibold text-gray-200">
+                  <tr className="bg-black">
+                    <td colSpan={5} className="px-6 py-2 font-semibold text-white text-left">
                       {groupName.toUpperCase()}
                     </td>
                   </tr>
@@ -158,40 +158,41 @@ export default function FinancialDashboard() {
                     <tr 
                       key={`${groupName}-${index}`}
                       className={`
-                        ${row[viewMode === 'team' ? 'Category' : 'Team'] === 'TOTAL' 
-                          ? 'bg-gray-900 font-semibold' 
-                          : 'hover:bg-gray-750'
+                        bg-black ${
+                          row[viewMode === 'team' ? 'Category' : 'Team'] === 'TOTAL' 
+                            ? 'font-semibold' 
+                            : 'hover:bg-gray-800'
                         }
                       `}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 w-1/5">
+                      <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm font-medium text-white text-left">
                         {viewMode === 'team' ? row.Team : row.Category}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
+                      <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
                         {viewMode === 'team' ? row.Category : row.Team}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
+                      <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
                         <button
                           onClick={() => handleCellClick(row.Team, row.Category)}
-                          className="text-blue-400 hover:text-blue-300 hover:underline"
+                          className="text-white hover:text-blue-300 hover:underline bg-transparent"
                         >
-                          ${Math.round(row.USD)}
+                          ${Math.round(row.USD).toLocaleString()}
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
+                      <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
                         <button
                           onClick={() => handleCellClick(row.Team, row.Category)}
-                          className="text-blue-400 hover:text-blue-300 hover:underline"
+                          className="text-white hover:text-blue-300 hover:underline bg-transparent"
                         >
-                          £{Math.round(row.GBP)}
+                          £{Math.round(row.GBP).toLocaleString()}
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
+                      <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
                         <button
                           onClick={() => handleCellClick(row.Team, row.Category)}
-                          className="text-blue-400 hover:text-blue-300 hover:underline"
+                          className="text-white hover:text-blue-300 hover:underline bg-transparent"
                         >
-                          ${Math.round(row['Total USD'])}
+                          ${Math.round(row['Total USD']).toLocaleString()}
                         </button>
                       </td>
                     </tr>
@@ -203,21 +204,21 @@ export default function FinancialDashboard() {
               ))}
               {/* Grand Total */}
               {grandTotal && (
-                <tr className="font-bold bg-gray-900">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100 w-1/5">
+                <tr className="font-bold bg-black">
+                  <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
                     {grandTotal[viewMode === 'team' ? 'Team' : 'Category']}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
+                  <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
                     {grandTotal[viewMode === 'team' ? 'Category' : 'Team']}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
-                    ${Math.round(grandTotal.USD)}
+                  <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
+                    ${Math.round(grandTotal.USD).toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
-                    £{Math.round(grandTotal.GBP)}
+                  <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
+                    £{Math.round(grandTotal.GBP).toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 w-1/5">
-                    ${Math.round(grandTotal['Total USD'])}
+                  <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
+                    ${Math.round(grandTotal['Total USD']).toLocaleString()}
                   </td>
                 </tr>
               )}

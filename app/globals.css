@@ -17,3 +17,13 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+.financial-table button {
+  color: white;
+  background: transparent;
+}
+
+.financial-table button:hover {
+  color: rgb(147, 197, 253); /* tailwind's blue-300 */
+  text-decoration: underline;
+}
