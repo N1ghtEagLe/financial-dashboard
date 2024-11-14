@@ -132,14 +132,27 @@ async def process_file(file: UploadFile):
         # Process the file
         result = process_excel_data(contents)
         logger.info("File processed successfully")
+        logger.info(f"Result: {result}")
         
-        return JSONResponse(content=result)
+        return JSONResponse(
+            content=result,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+            }
+        )
 
     except Exception as e:
         logger.error(f"Error processing file: {str(e)}")
         return JSONResponse(
             status_code=400,
-            content={"error": f"Error processing file: {str(e)}"}
+            content={"error": f"Error processing file: {str(e)}"},
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+            }
         )
 
 # Add a health check endpoint

@@ -21,23 +21,25 @@ export default function FileUpload({ onUploadSuccess, onUploadError }: {
     formData.append('file', file)
 
     try {
+      console.log('Sending request...')
       const response = await fetch(`${API_URL}/process`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
         },
-        credentials: 'include',
         body: formData,
       })
 
-      console.log('Response status:', response.status)
+      console.log('Response received:', response.status)
 
       if (!response.ok) {
         const errorData = await response.json()
+        console.error('Error response:', errorData)
         throw new Error(errorData.error || 'Upload failed')
       }
 
       const data = await response.json()
+      console.log('Success data:', data)
       onUploadSuccess(data)
     } catch (error) {
       console.error('Upload error:', error)
