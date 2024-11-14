@@ -58,6 +58,16 @@ const mockRawDataMapping: RawDataMapping = {
   ],
 }
 
+function formatCurrency(amount: number, currencySymbol: string): string {
+  const absAmount = Math.abs(amount)
+  const formattedAmount = absAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })
+  if (amount < 0) {
+    return `(${currencySymbol}${formattedAmount})`
+  } else {
+    return `${currencySymbol}${formattedAmount}`
+  }
+}
+
 export default function FinancialDashboard() {
   const [viewMode, setViewMode] = useState<'team' | 'category'>('team')
   const [summaryData, setSummaryData] = useState<SummaryData[]>(mockSummaryByTeam)
@@ -196,7 +206,7 @@ export default function FinancialDashboard() {
                           onClick={() => handleCellClick(row.Team, row.Category, 'USD')}
                           className="text-white hover:text-blue-300 hover:underline bg-transparent"
                         >
-                          ${Math.round(row.USD).toLocaleString()}
+                          {formatCurrency(row.USD, '$')}
                         </button>
                       </td>
                       <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
@@ -204,7 +214,7 @@ export default function FinancialDashboard() {
                           onClick={() => handleCellClick(row.Team, row.Category, 'GBP')}
                           className="text-white hover:text-blue-300 hover:underline bg-transparent"
                         >
-                          £{Math.round(row.GBP).toLocaleString()}
+                          {formatCurrency(row.GBP, '£')}
                         </button>
                       </td>
                       <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
@@ -212,14 +222,14 @@ export default function FinancialDashboard() {
                           onClick={() => handleCellClick(row.Team, row.Category, 'Total USD')}
                           className="text-white hover:text-blue-300 hover:underline bg-transparent"
                         >
-                          ${Math.round(row['Total USD']).toLocaleString()}
+                          {formatCurrency(row['Total USD'], '$')}
                         </button>
                       </td>
                     </tr>
                   ))}
-                  {/* Add two blank rows between groups */}
-                  <tr><td colSpan={5}>&nbsp;</td></tr>
-                  <tr><td colSpan={5}>&nbsp;</td></tr>
+                  {/* Add two blank rows between groups with no gridlines */}
+                  <tr className="border-0"><td colSpan={5}>&nbsp;</td></tr>
+                  <tr className="border-0"><td colSpan={5}>&nbsp;</td></tr>
                 </React.Fragment>
               ))}
               {/* Grand Total */}
@@ -232,13 +242,13 @@ export default function FinancialDashboard() {
                     {grandTotal[viewMode === 'team' ? 'Category' : 'Team']}
                   </td>
                   <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
-                    ${Math.round(grandTotal.USD).toLocaleString()}
+                    {formatCurrency(grandTotal.USD, '$')}
                   </td>
                   <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
-                    £{Math.round(grandTotal.GBP).toLocaleString()}
+                    {formatCurrency(grandTotal.GBP, '£')}
                   </td>
                   <td className="w-1/5 px-6 py-4 whitespace-nowrap text-sm text-white text-left">
-                    ${Math.round(grandTotal['Total USD']).toLocaleString()}
+                    {formatCurrency(grandTotal['Total USD'], '$')}
                   </td>
                 </tr>
               )}
@@ -355,7 +365,9 @@ export default function FinancialDashboard() {
                             <tr key={index}>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Date}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Description}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Amount.toFixed(2)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {formatCurrency(transaction.Amount, transaction.Currency === 'USD' ? '$' : '£')}
+                              </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Currency}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Team}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Category}</td>
