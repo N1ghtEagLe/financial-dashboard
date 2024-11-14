@@ -104,65 +104,128 @@ export default function FinancialDashboard() {
   }
 
   const renderSummaryTable = (data: SummaryData[]) => {
-    console.log('Rendering summary table with data:', data)
+    // Group the data by primary key (Team or Category)
+    const groupedData: { [key: string]: SummaryData[] } = {}
+    let currentGroup = ''
+    
+    data.forEach(row => {
+      const primaryKey = viewMode === 'team' ? row.Team : row.Category
+      if (primaryKey === 'GRAND TOTAL') return // Handle grand total separately
+      
+      if (!groupedData[primaryKey]) {
+        groupedData[primaryKey] = []
+      }
+      groupedData[primaryKey].push(row)
+    })
+
+    const grandTotal = data.find(row => 
+      (viewMode === 'team' ? row.Team : row.Category) === 'GRAND TOTAL'
+    )
+
     return (
-      <table className="min-w-full divide-y divide-gray-700 rounded-lg overflow-hidden">
-        <thead className="bg-gray-800">
-          <tr>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              {viewMode === 'team' ? 'Team' : 'Category'}
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              {viewMode === 'team' ? 'Category' : 'Team'}
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              USD
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              GBP
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              Total USD
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-gray-900 divide-y divide-gray-700">
-          {data.map((row, index) => (
-            <tr key={index}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">
-                {viewMode === 'team' ? row.Team : row.Category}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {viewMode === 'team' ? row.Category : row.Team}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                <button
-                  onClick={() => handleCellClick(row.Team, row.Category)}
-                  className="text-blue-400 hover:text-blue-300 hover:underline"
-                >
-                  ${row.USD.toFixed(2)}
-                </button>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                <button
-                  onClick={() => handleCellClick(row.Team, row.Category)}
-                  className="text-blue-400 hover:text-blue-300 hover:underline"
-                >
-                  £{row.GBP.toFixed(2)}
-                </button>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                <button
-                  onClick={() => handleCellClick(row.Team, row.Category)}
-                  className="text-blue-400 hover:text-blue-300 hover:underline"
-                >
-                  ${row['Total USD'].toFixed(2)}
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="flex flex-col">
+        {Object.entries(groupedData).map(([groupName, rows]) => (
+          <div 
+            key={groupName}
+            className="mb-16"
+          >
+            <div className="border-2 border-gray-600 rounded-lg overflow-hidden shadow-xl">
+              <table className="min-w-full divide-y divide-gray-700">
+                <thead className="bg-gray-900">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      {viewMode === 'team' ? 'Team' : 'Category'}
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      {viewMode === 'team' ? 'Category' : 'Team'}
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      USD
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      GBP
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Total USD
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700 bg-gray-800">
+                  {rows.map((row, index) => (
+                    <tr 
+                      key={index}
+                      className={`
+                        ${row[viewMode === 'team' ? 'Category' : 'Team'] === 'TOTAL' 
+                          ? 'bg-gray-900 font-semibold' 
+                          : 'hover:bg-gray-750'
+                        }
+                      `}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">
+                        {viewMode === 'team' ? row.Team : row.Category}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {viewMode === 'team' ? row.Category : row.Team}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        <button
+                          onClick={() => handleCellClick(row.Team, row.Category)}
+                          className="text-blue-400 hover:text-blue-300 hover:underline"
+                        >
+                          ${Math.round(row.USD)}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        <button
+                          onClick={() => handleCellClick(row.Team, row.Category)}
+                          className="text-blue-400 hover:text-blue-300 hover:underline"
+                        >
+                          £{Math.round(row.GBP)}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        <button
+                          onClick={() => handleCellClick(row.Team, row.Category)}
+                          className="text-blue-400 hover:text-blue-300 hover:underline"
+                        >
+                          ${Math.round(row['Total USD'])}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
+
+        {/* Grand Total */}
+        {grandTotal && (
+          <div className="border-2 border-gray-500 rounded-lg overflow-hidden shadow-xl bg-gray-900">
+            <table className="min-w-full">
+              <tbody>
+                <tr className="font-bold">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
+                    {grandTotal[viewMode === 'team' ? 'Team' : 'Category']}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    {grandTotal[viewMode === 'team' ? 'Category' : 'Team']}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    ${Math.round(grandTotal.USD)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    £{Math.round(grandTotal.GBP)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    ${Math.round(grandTotal['Total USD'])}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     )
   }
 
