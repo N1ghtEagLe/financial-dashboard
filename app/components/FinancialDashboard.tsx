@@ -124,22 +124,22 @@ export default function FinancialDashboard() {
     return (
       <div className="flex flex-col">
         <div className="border-2 border-gray-600 rounded-lg overflow-hidden shadow-xl">
-          <table style={{ width: '100%', tableLayout: 'fixed' }} className="financial-table">
+          <table style={{ width: '50%', tableLayout: 'fixed', margin: '0 auto' }} className="financial-table">
             <thead className="bg-black">
               <tr>
-                <th className="w-1/5 px-6 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
+                <th className="w-1/5 px-3 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
                   {viewMode === 'team' ? 'Team' : 'Category'}
                 </th>
-                <th className="w-1/5 px-6 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
+                <th className="w-1/5 px-3 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
                   {viewMode === 'team' ? 'Category' : 'Team'}
                 </th>
-                <th className="w-1/5 px-6 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
+                <th className="w-1/5 px-3 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
                   USD
                 </th>
-                <th className="w-1/5 px-6 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
+                <th className="w-1/5 px-3 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
                   GBP
                 </th>
-                <th className="w-1/5 px-6 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
+                <th className="w-1/5 px-3 py-3 text-xs font-medium text-white uppercase tracking-wider text-left">
                   Total USD
                 </th>
               </tr>
