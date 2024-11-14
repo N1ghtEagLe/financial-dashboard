@@ -21,12 +21,12 @@ export default function FileUpload({ onUploadSuccess, onUploadError }: {
     formData.append('file', file)
 
     try {
-      const baseUrl = API_URL?.replace(/\/$/, '')
-      const response = await fetch(`${baseUrl}/process`, {
+      const response = await fetch(`${API_URL}/process`, {
         method: 'POST',
         headers: {
-          'X-API-Key': API_KEY || '',
+          'Accept': 'application/json',
         },
+        credentials: 'include',
         body: formData,
       })
 

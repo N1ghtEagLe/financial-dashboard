@@ -7,36 +7,87 @@ from fastapi import FastAPI, UploadFile, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Dict, List, Any
+from openpyxl.styles import Font, Border, Side, Alignment, numbers
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Log startup
-logger.info("Starting application...")
-
 app = FastAPI()
 
-# Add API key verification function
-async def verify_api_key(x_api_key: str = Header(None)):
-    if x_api_key != os.environ.get('API_KEY'):
-        logger.error(f"Invalid API key received: {x_api_key}")
-        raise HTTPException(status_code=403, detail="Invalid API key")
-    return x_api_key
-
-# Add CORS middleware
+# Update CORS middleware with specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://financial-dashboard-xi-neon.vercel.app",  # Production
+        "http://localhost:3000",  # Local development
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
+
+def create_summary_data(df: pd.DataFrame, group_by_first: str, group_by_second: str) -> List[Dict]:
+    # Group by specified columns and sum the amounts
+    summary = df.groupby([group_by_first, group_by_second]).agg({
+        'USD': 'sum',
+        'GBP': 'sum'
+    }).round(2)
+    
+    output_data = []
+    
+    # Calculate grand totals
+    grand_total_usd = float(summary['USD'].sum())
+    grand_total_gbp = float(summary['GBP'].sum())
+    grand_total_combined = grand_total_usd + (grand_total_gbp * 1.29)
+    
+    for primary in summary.index.get_level_values(group_by_first).unique():
+        primary_data = summary.loc[primary]
+        
+        # Add data rows
+        for secondary in primary_data.index:
+            usd_amount = float(primary_data.loc[secondary, 'USD'])
+            gbp_amount = float(primary_data.loc[secondary, 'GBP'])
+            total_usd = usd_amount + (gbp_amount * 1.29)
+            
+            output_data.append({
+                group_by_first: primary,
+                group_by_second: secondary,
+                'USD': usd_amount,
+                'GBP': gbp_amount,
+                'Total USD': total_usd
+            })
+        
+        # Add total row for each section
+        total_usd = float(primary_data['USD'].sum())
+        total_gbp = float(primary_data['GBP'].sum())
+        section_total_usd = total_usd + (total_gbp * 1.29)
+        
+        output_data.append({
+            group_by_first: primary,
+            group_by_second: 'TOTAL',
+            'USD': total_usd,
+            'GBP': total_gbp,
+            'Total USD': section_total_usd
+        })
+    
+    # Add grand total row
+    output_data.append({
+        group_by_first: 'GRAND TOTAL',
+        group_by_second: '',
+        'USD': grand_total_usd,
+        'GBP': grand_total_gbp,
+        'Total USD': grand_total_combined
+    })
+    
+    return output_data
 
 def process_excel_data(file_contents: bytes) -> Dict[str, Any]:
     try:
         # Read Excel file from bytes
         df = pd.read_excel(io.BytesIO(file_contents))
+        logger.info(f"Successfully read Excel file with {len(df)} rows")
         
         # Replace NaN values with None
         df = df.replace({np.nan: None})
@@ -53,61 +104,6 @@ def process_excel_data(file_contents: bytes) -> Dict[str, Any]:
         df['USD'] = df.apply(lambda x: float(x['Amount']) if x['Currency'] == 'USD' else 0, axis=1)
         df['GBP'] = df.apply(lambda x: float(x['Amount']) if x['Currency'] == 'GBP' else 0, axis=1)
 
-        def create_summary_data(df: pd.DataFrame, group_by_first: str, group_by_second: str) -> List[Dict]:
-            # Group by specified columns and sum the amounts
-            summary = df.groupby([group_by_first, group_by_second]).agg({
-                'USD': 'sum',
-                'GBP': 'sum'
-            }).round(2)
-            
-            output_data = []
-            
-            # Calculate grand totals
-            grand_total_usd = float(summary['USD'].sum())
-            grand_total_gbp = float(summary['GBP'].sum())
-            grand_total_combined = grand_total_usd + (grand_total_gbp * 1.29)
-            
-            for primary in summary.index.get_level_values(group_by_first).unique():
-                primary_data = summary.loc[primary]
-                
-                # Add data rows
-                for secondary in primary_data.index:
-                    usd_amount = float(primary_data.loc[secondary, 'USD'])
-                    gbp_amount = float(primary_data.loc[secondary, 'GBP'])
-                    total_usd = usd_amount + (gbp_amount * 1.29)
-                    
-                    output_data.append({
-                        group_by_first: primary,
-                        group_by_second: secondary,
-                        'USD': usd_amount,
-                        'GBP': gbp_amount,
-                        'Total USD': total_usd
-                    })
-                
-                # Add total row for each section
-                total_usd = float(primary_data['USD'].sum())
-                total_gbp = float(primary_data['GBP'].sum())
-                section_total_usd = total_usd + (total_gbp * 1.29)
-                
-                output_data.append({
-                    group_by_first: primary,
-                    group_by_second: 'TOTAL',
-                    'USD': total_usd,
-                    'GBP': total_gbp,
-                    'Total USD': section_total_usd
-                })
-            
-            # Add grand total row
-            output_data.append({
-                group_by_first: 'GRAND TOTAL',
-                group_by_second: '',
-                'USD': grand_total_usd,
-                'GBP': grand_total_gbp,
-                'Total USD': grand_total_combined
-            })
-            
-            return output_data
-
         # Create summaries
         team_summary = create_summary_data(df, 'Team', 'Category')
         category_summary = create_summary_data(df, 'Category', 'Team')
@@ -122,53 +118,34 @@ def process_excel_data(file_contents: bytes) -> Dict[str, Any]:
         }
         
     except Exception as e:
+        logger.error(f"Error processing Excel: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/process")
-async def process_file(file: UploadFile, api_key: str = Depends(verify_api_key)):
+async def process_file(file: UploadFile):
     try:
         logger.info(f"Processing file: {file.filename}")
         
-        # Verify file type
-        if not file.filename.endswith(('.xlsx', '.xls')):
-            logger.error(f"Invalid file type: {file.filename}")
-            return JSONResponse(
-                status_code=400,
-                content={"error": "Invalid file type. Please upload an Excel file."}
-            )
-
         # Read file contents
         contents = await file.read()
         logger.info(f"File size: {len(contents)} bytes")
 
         # Process the file
-        try:
-            result = process_excel_data(contents)
-            logger.info("File processed successfully")
-            return JSONResponse(content=result)
-
-        except Exception as e:
-            logger.error(f"Error processing file: {str(e)}")
-            return JSONResponse(
-                status_code=400,
-                content={"error": f"Error processing file: {str(e)}"}
-            )
+        result = process_excel_data(contents)
+        logger.info("File processed successfully")
+        
+        return JSONResponse(content=result)
 
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Error processing file: {str(e)}")
         return JSONResponse(
-            status_code=500,
-            content={"error": f"Server error: {str(e)}"}
+            status_code=400,
+            content={"error": f"Error processing file: {str(e)}"}
         )
 
 @app.get("/")
 async def read_root():
-    logger.info("Health check endpoint called")
-    return {
-        "status": "healthy",
-        "port": os.environ.get("PORT"),
-        "environment": os.environ.get("RAILWAY_ENVIRONMENT")
-    }
+    return {"status": "healthy"}
 
-# Add this handler for Vercel
+# Add this handler for Railway
 handler = app
