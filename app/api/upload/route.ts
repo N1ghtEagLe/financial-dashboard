@@ -6,35 +6,42 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File
     
     if (!file) {
+      console.log('No file received in request')
       return NextResponse.json(
         { error: 'No file uploaded' },
         { status: 400 }
       )
     }
 
-    // Create new FormData for Python service
+    console.log('Received file:', file.name)
+
     const pythonFormData = new FormData()
     pythonFormData.append('file', file)
 
-    // Call Python service
+    console.log('Sending request to Python service...')
+    
     const response = await fetch('http://localhost:8000/process', {
       method: 'POST',
       body: pythonFormData,
     })
 
+    console.log('Python service response status:', response.status)
+
+    const data = await response.json()
+    
     if (!response.ok) {
-      const error = await response.json()
+      console.error('Python service error:', data)
       return NextResponse.json(
-        { error: error.detail || 'Error processing file' },
+        { error: data.error || 'Error processing file' },
         { status: response.status }
       )
     }
 
-    const data = await response.json()
+    console.log('Successfully processed data')
     return NextResponse.json(data)
 
   } catch (error) {
-    console.error('Error processing file upload:', error)
+    console.error('Detailed error:', error)
     return NextResponse.json(
       { error: 'Error processing file upload' },
       { status: 500 }

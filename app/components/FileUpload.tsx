@@ -29,18 +29,18 @@ export default function FileUpload({ onUploadSuccess, onUploadError }: FileUploa
         body: formData,
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Upload failed')
+        throw new Error(data.error || 'Upload failed')
       }
 
-      const data = await response.json()
       onUploadSuccess(data)
     } catch (error) {
+      console.error('Upload error:', error)
       onUploadError(error instanceof Error ? error.message : 'Upload failed')
     } finally {
       setIsUploading(false)
-      // Reset the input
       event.target.value = ''
     }
   }, [onUploadSuccess, onUploadError])
