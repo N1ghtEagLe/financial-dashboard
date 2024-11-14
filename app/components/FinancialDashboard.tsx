@@ -65,8 +65,12 @@ export default function FinancialDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rawTransactions, setRawTransactions] = useState<RawTransaction[]>([])
+  const [teamSummary, setTeamSummary] = useState<SummaryData[]>(mockSummaryByTeam)
+  const [categorySummary, setCategorySummary] = useState<SummaryData[]>(mockSummaryByCategory)
 
   const handleUploadSuccess = (data: any) => {
+    setTeamSummary(data.teamSummary)
+    setCategorySummary(data.categorySummary)
     setSummaryData(viewMode === 'team' ? data.teamSummary : data.categorySummary)
     setRawTransactions(data.rawTransactions)
     setError(null)
@@ -96,7 +100,7 @@ export default function FinancialDashboard() {
 
   const handleViewModeChange = (mode: 'team' | 'category') => {
     setViewMode(mode)
-    setSummaryData(mode === 'team' ? data.teamSummary : data.categorySummary)
+    setSummaryData(mode === 'team' ? teamSummary : categorySummary)
   }
 
   const renderSummaryTable = (data: SummaryData[]) => {
@@ -126,10 +130,10 @@ export default function FinancialDashboard() {
           {data.map((row, index) => (
             <tr key={index}>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">
-                {row[viewMode === 'team' ? 'Team' : 'Category']}
+                {viewMode === 'team' ? row.Team : row.Category}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {row[viewMode === 'team' ? 'Category' : 'Team']}
+                {viewMode === 'team' ? row.Category : row.Team}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                 <button
@@ -182,7 +186,7 @@ export default function FinancialDashboard() {
 
         <div className="mb-6">
           <button
-            onClick={() => setViewMode('team')}
+            onClick={() => handleViewModeChange('team')}
             className={`mr-2 px-4 py-2 rounded-full transition-colors duration-200 ${
               viewMode === 'team'
                 ? 'bg-blue-600 text-white'
@@ -192,7 +196,7 @@ export default function FinancialDashboard() {
             Summary by Team
           </button>
           <button
-            onClick={() => setViewMode('category')}
+            onClick={() => handleViewModeChange('category')}
             className={`px-4 py-2 rounded-full transition-colors duration-200 ${
               viewMode === 'category'
                 ? 'bg-blue-600 text-white'
