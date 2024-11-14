@@ -64,10 +64,11 @@ export default function FinancialDashboard() {
   const [selectedTransactions, setSelectedTransactions] = useState<RawTransaction[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [rawTransactions, setRawTransactions] = useState<RawTransaction[]>([])
 
   const handleUploadSuccess = (data: any) => {
-    // Update the state with real data
     setSummaryData(viewMode === 'team' ? data.teamSummary : data.categorySummary)
+    setRawTransactions(data.rawTransactions)
     setError(null)
   }
 
@@ -77,12 +78,25 @@ export default function FinancialDashboard() {
 
   const handleCellClick = (team: string, category: string) => {
     console.log('Cell clicked:', { team, category })
-    const key = `${team},${category}`
-    console.log('Looking up transactions for key:', key)
-    const transactions = mockRawDataMapping[key] || []
-    console.log('Found transactions:', transactions)
-    setSelectedTransactions(transactions)
+    
+    const filteredTransactions = rawTransactions.filter(transaction => {
+      if (team === 'GRAND TOTAL') {
+        return true
+      }
+      if (category === 'TOTAL') {
+        return transaction.Team === team
+      }
+      return transaction.Team === team && transaction.Category === category
+    })
+
+    console.log('Filtered transactions:', filteredTransactions)
+    setSelectedTransactions(filteredTransactions)
     setIsModalOpen(true)
+  }
+
+  const handleViewModeChange = (mode: 'team' | 'category') => {
+    setViewMode(mode)
+    setSummaryData(mode === 'team' ? data.teamSummary : data.categorySummary)
   }
 
   const renderSummaryTable = (data: SummaryData[]) => {
