@@ -1,7 +1,7 @@
 'use client'
 import '../globals.css'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import FileUpload from './FileUpload'
 
 type SummaryData = {
@@ -70,13 +70,34 @@ function formatCurrency(amount: number, currencySymbol: string): string {
 
 export default function FinancialDashboard() {
   const [viewMode, setViewMode] = useState<'team' | 'category'>('team')
-  const [summaryData, setSummaryData] = useState<SummaryData[]>(mockSummaryByTeam)
+  const [summaryData, setSummaryData] = useState<SummaryData[]>([])
   const [selectedTransactions, setSelectedTransactions] = useState<RawTransaction[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rawTransactions, setRawTransactions] = useState<RawTransaction[]>([])
-  const [teamSummary, setTeamSummary] = useState<SummaryData[]>(mockSummaryByTeam)
-  const [categorySummary, setCategorySummary] = useState<SummaryData[]>(mockSummaryByCategory)
+  const [teamSummary, setTeamSummary] = useState<SummaryData[]>([])
+  const [categorySummary, setCategorySummary] = useState<SummaryData[]>([])
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/initial-data`)
+        if (!response.ok) {
+          throw new Error('Failed to load initial data')
+        }
+        const data = await response.json()
+        setTeamSummary(data.teamSummary)
+        setCategorySummary(data.categorySummary)
+        setSummaryData(viewMode === 'team' ? data.teamSummary : data.categorySummary)
+        setRawTransactions(data.rawTransactions)
+      } catch (error) {
+        console.error('Error loading initial data:', error)
+        setError('Failed to load initial data')
+      }
+    }
+
+    loadInitialData()
+  }, [viewMode])
 
   const handleUploadSuccess = (data: any) => {
     setTeamSummary(data.teamSummary)

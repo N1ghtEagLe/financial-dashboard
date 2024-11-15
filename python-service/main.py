@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Dict, List, Any
 from openpyxl.styles import Font, Border, Side, Alignment, numbers
+from pathlib import Path
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -26,6 +27,8 @@ app.add_middleware(
 
 port = os.getenv("PORT", "8080")
 logger.info(f"Starting server on port: {port}")
+
+INITIAL_DATA_PATH = Path(__file__).parent / "initial_data.xlsx"
 
 def create_summary_data(df: pd.DataFrame, group_by_first: str, group_by_second: str) -> List[Dict]:
     # Group by specified columns and sum the amounts
@@ -207,3 +210,33 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "port": port}
+
+@app.get("/initial-data")
+async def get_initial_data():
+    try:
+        if not INITIAL_DATA_PATH.exists():
+            logger.error("Initial data file not found")
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Initial data not found"},
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+            
+        with open(INITIAL_DATA_PATH, "rb") as f:
+            contents = f.read()
+            
+        result = process_excel_data(contents)
+        logger.info("Initial data processed successfully")
+        
+        return JSONResponse(
+            content=result,
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+        
+    except Exception as e:
+        logger.error(f"Error loading initial data: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error loading initial data: {str(e)}"},
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
