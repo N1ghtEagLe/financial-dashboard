@@ -80,24 +80,33 @@ export default function FinancialDashboard() {
 
   useEffect(() => {
     const loadInitialData = async () => {
+      console.log("Starting to load initial data...");
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/initial-data`)
+        console.log("Fetching from:", `${process.env.NEXT_PUBLIC_API_URL}/initial-data`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/initial-data`);
+        console.log("Response received:", response.status);
         if (!response.ok) {
-          throw new Error('Failed to load initial data')
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json()
-        setTeamSummary(data.teamSummary)
-        setCategorySummary(data.categorySummary)
-        setSummaryData(viewMode === 'team' ? data.teamSummary : data.categorySummary)
-        setRawTransactions(data.rawTransactions)
+        const data = await response.json();
+        console.log("Data received:", data);
+        
+        // Set all the state values
+        setTeamSummary(data.teamSummary);
+        setCategorySummary(data.categorySummary);
+        setRawTransactions(data.rawTransactions);
+        // Also set the summaryData based on current viewMode
+        setSummaryData(viewMode === 'team' ? data.teamSummary : data.categorySummary);
+        
+        setError(null);
       } catch (error) {
-        console.error('Error loading initial data:', error)
-        setError('Failed to load initial data')
+        console.error("Error loading initial data:", error);
+        setError('Failed to load initial data');
       }
-    }
+    };
 
-    loadInitialData()
-  }, [viewMode])
+    loadInitialData();
+  }, [viewMode]);
 
   const handleUploadSuccess = (data: any) => {
     setTeamSummary(data.teamSummary)

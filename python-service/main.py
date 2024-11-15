@@ -3,12 +3,14 @@ import logging
 import io
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, UploadFile, HTTPException, Header, Depends
+from fastapi import FastAPI, UploadFile, HTTPException, Header, Depends, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Dict, List, Any
 from openpyxl.styles import Font, Border, Side, Alignment, numbers
 from pathlib import Path
+from services.redis_service import RedisService
+from utils.logger import logger
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -16,10 +18,13 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+# Initialize Redis service
+redis_service = RedisService()
+
 # Update CORS middleware to allow all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,7 +33,8 @@ app.add_middleware(
 port = os.getenv("PORT", "8080")
 logger.info(f"Starting server on port: {port}")
 
-INITIAL_DATA_PATH = Path(__file__).parent / "initial_data.xlsx"
+INITIAL_DATA_PATH = Path(__file__).parent / "october_2024.xlsx"
+logger.info(f"Looking for Excel file at: {INITIAL_DATA_PATH}")
 
 def create_summary_data(df: pd.DataFrame, group_by_first: str, group_by_second: str) -> List[Dict]:
     # Group by specified columns and sum the amounts
@@ -213,20 +219,42 @@ async def health_check():
 
 @app.get("/initial-data")
 async def get_initial_data():
+    logger.info("Initial data endpoint called")
     try:
+        # First try to get data from Redis
+        logger.info("Attempting to get data from Redis")
+        redis_data = redis_service.get_data()
+        if redis_data:
+            logger.info("Data retrieved from Redis successfully")
+            return JSONResponse(
+                content=redis_data,
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+        
+        logger.info("No data in Redis, checking Excel file")
+        # If no Redis data, process Excel and save to Redis
         if not INITIAL_DATA_PATH.exists():
-            logger.error("Initial data file not found")
+            logger.error(f"Excel file not found at path: {INITIAL_DATA_PATH}")
             return JSONResponse(
                 status_code=404,
                 content={"error": "Initial data not found"},
                 headers={"Access-Control-Allow-Origin": "*"}
             )
-            
+        
+        logger.info(f"Excel file found, size: {INITIAL_DATA_PATH.stat().st_size} bytes")
         with open(INITIAL_DATA_PATH, "rb") as f:
             contents = f.read()
-            
+            logger.info(f"Read {len(contents)} bytes from Excel file")
+        
+        logger.info("Processing Excel data")
         result = process_excel_data(contents)
-        logger.info("Initial data processed successfully")
+        
+        # Save to Redis
+        logger.info("Saving processed data to Redis")
+        if redis_service.save_data(result):
+            logger.info("Data saved to Redis successfully")
+        else:
+            logger.warning("Failed to save data to Redis")
         
         return JSONResponse(
             content=result,
@@ -234,9 +262,33 @@ async def get_initial_data():
         )
         
     except Exception as e:
-        logger.error(f"Error loading initial data: {str(e)}")
+        logger.error(f"Error in get_initial_data: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,
             content={"error": f"Error loading initial data: {str(e)}"},
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        result = process_excel_data(contents)
+        
+        # Save to Redis
+        if redis_service.save_data(result):
+            logger.info("Data processed and saved to Redis")
+        else:
+            logger.warning("Data processed but not saved to Redis")
+            
+        return JSONResponse(
+            content=result,
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+    except Exception as e:
+        logger.error(f"Error processing file: {str(e)}")
+        return JSONResponse(
+            status_code=400,
+            content={"error": f"Error processing file: {str(e)}"},
             headers={"Access-Control-Allow-Origin": "*"}
         )
