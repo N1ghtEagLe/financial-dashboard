@@ -292,3 +292,20 @@ async def upload_file(file: UploadFile = File(...)):
             content={"error": f"Error processing file: {str(e)}"},
             headers={"Access-Control-Allow-Origin": "*"}
         )
+
+@app.get("/available-months")
+async def get_available_months():
+    try:
+        # Get available months from Redis
+        months = redis_service.get_available_months()
+        return JSONResponse(
+            content={"months": months},
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+    except Exception as e:
+        logger.error(f"Error getting available months: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)},
+            headers={"Access-Control-Allow-Origin": "*"}
+        )

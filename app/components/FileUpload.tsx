@@ -50,7 +50,7 @@ export default function FileUpload({ onUploadSuccess, onUploadError }: {
   }
 
   return (
-    <div className="mb-6">
+    <div>
       <label className="relative inline-block">
         <input
           type="file"

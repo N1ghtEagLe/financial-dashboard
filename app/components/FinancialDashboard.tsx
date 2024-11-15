@@ -77,6 +77,8 @@ export default function FinancialDashboard() {
   const [rawTransactions, setRawTransactions] = useState<RawTransaction[]>([])
   const [teamSummary, setTeamSummary] = useState<SummaryData[]>([])
   const [categorySummary, setCategorySummary] = useState<SummaryData[]>([])
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -107,6 +109,24 @@ export default function FinancialDashboard() {
 
     loadInitialData();
   }, [viewMode]);
+
+  useEffect(() => {
+    const fetchAvailableMonths = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/available-months`);
+        if (!response.ok) throw new Error('Failed to fetch months');
+        const data = await response.json();
+        setAvailableMonths(data.months);
+        if (data.months.length > 0) {
+          setSelectedMonth(data.months[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching months:', error);
+      }
+    };
+
+    fetchAvailableMonths();
+  }, []);
 
   const handleUploadSuccess = (data: any) => {
     setTeamSummary(data.teamSummary)
@@ -296,10 +316,24 @@ export default function FinancialDashboard() {
       <div className="container mx-auto p-4">
         <h1 className="text-3xl font-bold mb-6">Financial Dashboard</h1>
         
-        <FileUpload 
-          onUploadSuccess={handleUploadSuccess}
-          onUploadError={handleUploadError}
-        />
+        <div className="flex items-center gap-4 mb-6">
+          <FileUpload 
+            onUploadSuccess={handleUploadSuccess}
+            onUploadError={handleUploadError}
+          />
+          
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="h-[38px] bg-gray-700 text-white px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {availableMonths.map((month) => (
+              <option key={month} value={month}>
+                {month}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {error && (
           <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-300">

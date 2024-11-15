@@ -63,4 +63,15 @@ class RedisService:
             }
         except Exception as e:
             logger.error(f"Redis get error: {str(e)}")
-            return None 
+            return None
+
+    def get_available_months(self) -> list:
+        """Get list of available months in Redis"""
+        try:
+            # For now, we only have october_2024
+            if self.redis_client.exists("october_2024"):
+                return ["October 2024"]
+            return []
+        except Exception as e:
+            logger.error(f"Redis get months error: {str(e)}")
+            return []
