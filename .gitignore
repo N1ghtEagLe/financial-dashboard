@@ -41,3 +41,10 @@ next-env.d.ts
 
 # Temporary files
 /tmp
+
+.env
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

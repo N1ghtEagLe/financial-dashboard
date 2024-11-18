@@ -28,7 +28,7 @@ redis_service = RedisService()
 # Update CORS middleware to allow all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["https://financial-dashboard-foresight.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
