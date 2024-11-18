@@ -18,6 +18,7 @@ const COLORS = [
     '#FF8C42',  // Orange
     '#9370DB',  // Purple
     '#20B2AA',  // Teal
+    '#FF69B4',  // Hot Pink - Our new color for harmony
 ]
 
 const CustomizedContent: React.FC<any> = (props) => {
