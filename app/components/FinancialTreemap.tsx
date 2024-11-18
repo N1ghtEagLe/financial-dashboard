@@ -60,7 +60,7 @@ export default function FinancialTreemap({ data, viewMode }: FinancialTreemapPro
             item.Team !== 'GRAND TOTAL' &&
             item.Category !== 'GRAND TOTAL' &&
             item.Category !== 'TOTAL' &&
-            item[viewMode === 'team' ? 'Team' : 'Category'] !== 'TOTAL'
+            item.Team !== 'TOTAL'
         )
 
         const groupedData = filteredData.reduce((acc, item) => {
@@ -74,13 +74,15 @@ export default function FinancialTreemap({ data, viewMode }: FinancialTreemapPro
 
         return [{
             name: 'root',
-            children: Object.entries(groupedData).map(([name, value], index) => ({
-                name,
-                size: value,
-                value,
-                index,
-                color: COLORS[index % COLORS.length]
-            }))
+            children: Object.entries(groupedData)
+                .filter(([name]) => name !== 'TOTAL' && name !== 'GRAND TOTAL')
+                .map(([name, value], index) => ({
+                    name,
+                    size: value,
+                    value,
+                    index,
+                    color: COLORS[index % COLORS.length]
+                }))
         }]
     }
 
