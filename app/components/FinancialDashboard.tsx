@@ -3,6 +3,7 @@ import '../globals.css'
 
 import React, { useState, useEffect } from 'react'
 import FileUpload from './FileUpload'
+import FinancialTreemap from './FinancialTreemap'
 
 type SummaryData = {
   Team: string
@@ -343,148 +344,166 @@ export default function FinancialDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-6">Financial Dashboard</h1>
-        
-        <div className="flex items-center gap-4 mb-6">
-          <FileUpload 
-            onUploadSuccess={handleUploadSuccess}
-            onUploadError={handleUploadError}
-          />
-          
-          <select
-            value={selectedMonth}
-            onChange={handleMonthChange}
-            className="h-[38px] bg-gray-700 text-white px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {availableMonths.map((month) => (
-              <option key={month} value={month}>
-                {month}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-300">
-            {error}
-          </div>
-        )}
-
-        <div className="mb-6">
-          <button
-            onClick={() => handleViewModeChange('team')}
-            className={`mr-2 px-4 py-2 rounded-full transition-colors duration-200 ${
-              viewMode === 'team'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            Summary by Team
-          </button>
-          <button
-            onClick={() => handleViewModeChange('category')}
-            className={`px-4 py-2 rounded-full transition-colors duration-200 ${
-              viewMode === 'category'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            Summary by Category
-          </button>
-        </div>
-        <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden w-fit">
-          <div className="px-6 py-4">
-            <h3 className="text-xl font-semibold text-gray-100">
-              {viewMode === 'team' ? 'Team Summary' : 'Category Summary'}
-            </h3>
-          </div>
-          <div className="border-t border-gray-700">
-            {renderSummaryTable(summaryData)}
-          </div>
-        </div>
-      </div>
-      {isModalOpen && (
-        <div 
-          className="fixed inset-0 z-50 overflow-y-auto"
-          aria-labelledby="modal-title" 
-          role="dialog" 
-          aria-modal="true"
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
-        >
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div 
-              className="fixed inset-0 bg-black opacity-75 transition-opacity" 
-              aria-hidden="true"
-              style={{ position: 'fixed', zIndex: 40 }}
-            ></div>
+        <div className="container mx-auto p-4">
+            <h1 className="text-3xl font-bold mb-6">Financial Dashboard</h1>
             
-            <div className="inline-block align-middle bg-black rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-4xl sm:w-full relative" 
-                 style={{ 
-                   zIndex: 50,
-                   boxShadow: '0 0 20px rgba(0, 0, 0, 0.5)'
-                 }}>
-              <div className="bg-black px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg leading-6 font-medium text-gray-100" id="modal-title">
-                        Transaction Details
-                      </h3>
-                      <button
-                        onClick={() => setIsModalOpen(false)}
-                        className="text-gray-400 hover:text-gray-200"
-                      >
-                        <span className="sr-only">Close</span>
-                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="mt-2 max-h-[70vh] overflow-auto">
-                      <table className="min-w-full divide-y divide-gray-700">
-                        <thead className="bg-black">
-                          <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Currency</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Team</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-black divide-y divide-gray-700">
-                          {selectedTransactions.map((transaction, index) => (
-                            <tr key={index}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Date}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Description}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                {formatCurrency(transaction.Amount, transaction.Currency === 'USD' ? '$' : '£')}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Currency}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Team}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Category}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-black px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={() => setIsModalOpen(false)}
+            {/* Controls section */}
+            <div className="flex items-center gap-4 mb-6">
+                <FileUpload 
+                    onUploadSuccess={handleUploadSuccess}
+                    onUploadError={handleUploadError}
+                />
+                
+                <select
+                    value={selectedMonth}
+                    onChange={handleMonthChange}
+                    className="h-[38px] bg-gray-700 text-white px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  Close
-                </button>
-              </div>
+                    {availableMonths.map((month) => (
+                        <option key={month} value={month}>
+                            {month}
+                        </option>
+                    ))}
+                </select>
             </div>
-          </div>
+
+            {/* View mode toggles */}
+            <div className="mb-6">
+                <button
+                    onClick={() => handleViewModeChange('team')}
+                    className={`mr-2 px-4 py-2 rounded-full transition-colors duration-200 ${
+                        viewMode === 'team'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                >
+                    Summary by Team
+                </button>
+                <button
+                    onClick={() => handleViewModeChange('category')}
+                    className={`px-4 py-2 rounded-full transition-colors duration-200 ${
+                        viewMode === 'category'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                >
+                    Summary by Category
+                </button>
+            </div>
+
+            {/* Split view container */}
+            <div className="flex gap-6">
+                {/* Left side: Table */}
+                <div className="w-1/2">
+                    <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+                        <div className="px-6 py-4">
+                            <h3 className="text-xl font-semibold text-gray-100">
+                                {viewMode === 'team' ? 'Team Summary' : 'Category Summary'}
+                            </h3>
+                        </div>
+                        <div className="border-t border-gray-700">
+                            {renderSummaryTable(summaryData)}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right side: Treemap */}
+                <div className="w-1/2">
+                    <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden p-4">
+                        <h3 className="text-xl font-semibold text-gray-100 mb-4">
+                            Distribution View
+                        </h3>
+                        <FinancialTreemap 
+                            data={summaryData} 
+                            viewMode={viewMode}
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
-      )}
+
+        {/* Existing modal code */}
+        {isModalOpen && (
+            <div 
+                className="fixed inset-0 z-50 overflow-y-auto"
+                aria-labelledby="modal-title" 
+                role="dialog" 
+                aria-modal="true"
+                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+            >
+                <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                    <div 
+                        className="fixed inset-0 bg-black opacity-75 transition-opacity" 
+                        aria-hidden="true"
+                        style={{ position: 'fixed', zIndex: 40 }}
+                    ></div>
+                    
+                    <div className="inline-block align-middle bg-black rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-4xl sm:w-full relative" 
+                         style={{ 
+                             zIndex: 50,
+                             boxShadow: '0 0 20px rgba(0, 0, 0, 0.5)'
+                         }}>
+                        <div className="bg-black px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div className="sm:flex sm:items-start">
+                                <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="text-lg leading-6 font-medium text-gray-100" id="modal-title">
+                                            Transaction Details
+                                        </h3>
+                                        <button
+                                            onClick={() => setIsModalOpen(false)}
+                                            className="text-gray-400 hover:text-gray-200"
+                                        >
+                                            <span className="sr-only">Close</span>
+                                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div className="mt-2 max-h-[70vh] overflow-auto">
+                                        <table className="min-w-full divide-y divide-gray-700">
+                                            <thead className="bg-black">
+                                                <tr>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Currency</th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Team</th>
+                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-black divide-y divide-gray-700">
+                                                {selectedTransactions.map((transaction, index) => (
+                                                    <tr key={index}>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Date}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Description}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                            {formatCurrency(transaction.Amount, transaction.Currency === 'USD' ? '$' : '£')}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Currency}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Team}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{transaction.Category}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-black px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <button
+                                type="button"
+                                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                onClick={() => setIsModalOpen(false)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
     </div>
   )
 }

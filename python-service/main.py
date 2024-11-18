@@ -28,7 +28,10 @@ redis_service = RedisService()
 # Update CORS middleware to allow all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://financial-dashboard-foresight.vercel.app"],
+    allow_origins=[
+        "https://financial-dashboard-xi-neon.vercel.app",  # Your Vercel domain
+        "http://localhost:3000"  # For local development
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -421,18 +424,30 @@ async def login(credentials: LoginRequest):
         if credentials.email == AUTH_EMAIL and credentials.password == AUTH_PASSWORD:
             return JSONResponse(
                 content={"success": True},
-                headers={"Access-Control-Allow-Origin": "*"}
+                headers={
+                    "Access-Control-Allow-Origin": "https://financial-dashboard-xi-neon.vercel.app",
+                    "Access-Control-Allow-Methods": "POST, OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type",
+                }
             )
         else:
             return JSONResponse(
                 status_code=401,
                 content={"success": False, "error": "Invalid credentials"},
-                headers={"Access-Control-Allow-Origin": "*"}
+                headers={
+                    "Access-Control-Allow-Origin": "https://financial-dashboard-xi-neon.vercel.app",
+                    "Access-Control-Allow-Methods": "POST, OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type",
+                }
             )
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"success": False, "error": "Internal server error"},
-            headers={"Access-Control-Allow-Origin": "*"}
+            headers={
+                "Access-Control-Allow-Origin": "https://financial-dashboard-xi-neon.vercel.app",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+            }
         )
