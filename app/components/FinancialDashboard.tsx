@@ -116,8 +116,9 @@ export default function FinancialDashboard() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/available-months`);
         if (!response.ok) throw new Error('Failed to fetch months');
         const data = await response.json();
+        console.log("Available months:", data.months);
         setAvailableMonths(data.months);
-        if (data.months.length > 0) {
+        if (data.months.length > 0 && !selectedMonth) {
           setSelectedMonth(data.months[0]);
         }
       } catch (error) {
@@ -134,6 +135,7 @@ export default function FinancialDashboard() {
     setSummaryData(viewMode === 'team' ? data.teamSummary : data.categorySummary)
     setRawTransactions(data.rawTransactions)
     setError(null)
+    fetchAvailableMonths()
   }
 
   const handleUploadError = (error: string) => {
@@ -311,6 +313,38 @@ export default function FinancialDashboard() {
 
   console.log('FinancialDashboard rendering with viewMode:', viewMode)
 
+  // Add function to load data for a specific month
+  const loadMonthData = async (monthKey: string) => {
+    console.log("Loading data for month:", monthKey);
+    try {
+        // Convert display format back to Redis key format (e.g., "September 2024" -> "september_2024")
+        const redisKey = monthKey.toLowerCase().replace(' ', '_');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/month/${redisKey}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to load month data');
+        }
+        const data = await response.json();
+        console.log("Month data received:", data);
+        
+        setTeamSummary(data.teamSummary);
+        setCategorySummary(data.categorySummary);
+        setSummaryData(viewMode === 'team' ? data.teamSummary : data.categorySummary);
+        setRawTransactions(data.rawTransactions);
+        setError(null);
+    } catch (error) {
+        console.error('Error loading month data:', error);
+        setError('Failed to load month data');
+    }
+  };
+
+  // Update month selection handler
+  const handleMonthChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newMonth = event.target.value;
+    setSelectedMonth(newMonth);
+    loadMonthData(newMonth);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="container mx-auto p-4">
@@ -324,7 +358,7 @@ export default function FinancialDashboard() {
           
           <select
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
+            onChange={handleMonthChange}
             className="h-[38px] bg-gray-700 text-white px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {availableMonths.map((month) => (

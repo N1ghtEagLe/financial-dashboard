@@ -343,6 +343,7 @@ async def get_available_months():
     try:
         # Get available months from Redis
         months = redis_service.get_available_months()
+        logger.info(f"Available months endpoint returning: {months}")
         return JSONResponse(
             content={"months": months},
             headers={"Access-Control-Allow-Origin": "*"}
@@ -369,6 +370,33 @@ async def debug_redis_keys():
         )
     except Exception as e:
         logger.error(f"Error getting Redis keys: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)},
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+
+@app.get("/month/{month_key}")
+async def get_month_data(month_key: str):
+    """Get data for a specific month"""
+    try:
+        logger.info(f"Getting data for month: {month_key}")
+        data = redis_service.get_data(month_key)
+        if not data:
+            logger.error(f"No data found for month: {month_key}")
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Month not found"},
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+        
+        logger.info(f"Successfully retrieved data for month: {month_key}")
+        return JSONResponse(
+            content=data,
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+    except Exception as e:
+        logger.error(f"Error getting month data: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"error": str(e)},
