@@ -77,8 +77,23 @@ export default function FinancialDashboard() {
   const [rawTransactions, setRawTransactions] = useState<RawTransaction[]>([])
   const [teamSummary, setTeamSummary] = useState<SummaryData[]>([])
   const [categorySummary, setCategorySummary] = useState<SummaryData[]>([])
-  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [availableMonths, setAvailableMonths] = useState<string[]>([])
+  const [selectedMonth, setSelectedMonth] = useState<string>("")
+
+  const fetchAvailableMonths = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/available-months`)
+      if (!response.ok) throw new Error('Failed to fetch months')
+      const data = await response.json()
+      console.log("Available months:", data.months)
+      setAvailableMonths(data.months)
+      if (data.months.length > 0 && !selectedMonth) {
+        setSelectedMonth(data.months[0])
+      }
+    } catch (error) {
+      console.error('Error fetching months:', error)
+    }
+  }
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -109,25 +124,6 @@ export default function FinancialDashboard() {
 
     loadInitialData();
   }, [viewMode]);
-
-  useEffect(() => {
-    const fetchAvailableMonths = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/available-months`);
-        if (!response.ok) throw new Error('Failed to fetch months');
-        const data = await response.json();
-        console.log("Available months:", data.months);
-        setAvailableMonths(data.months);
-        if (data.months.length > 0 && !selectedMonth) {
-          setSelectedMonth(data.months[0]);
-        }
-      } catch (error) {
-        console.error('Error fetching months:', error);
-      }
-    };
-
-    fetchAvailableMonths();
-  }, []);
 
   const handleUploadSuccess = (data: any) => {
     setTeamSummary(data.teamSummary)
