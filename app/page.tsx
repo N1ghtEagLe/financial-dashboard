@@ -1,10 +1,5 @@
-import FinancialDashboard from './components/FinancialDashboard'
+import { redirect } from 'next/navigation'
 
 export default function Home() {
-  console.log('Home page rendering')
-  return (
-    <div className="min-h-screen bg-black text-white">
-      <FinancialDashboard />
-    </div>
-  )
+  redirect('/login')
 }

@@ -11,6 +11,10 @@ from openpyxl.styles import Font, Border, Side, Alignment, numbers
 from pathlib import Path
 from services.redis_service import RedisService
 from utils.logger import logger
+from dotenv import load_dotenv
+from pydantic import BaseModel
+
+load_dotenv()
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -35,6 +39,9 @@ logger.info(f"Starting server on port: {port}")
 
 INITIAL_DATA_PATH = Path(__file__).parent / "october_2024.xlsx"
 logger.info(f"Looking for Excel file at: {INITIAL_DATA_PATH}")
+
+AUTH_EMAIL = os.getenv('AUTH_EMAIL', 'finance@foresight.works')
+AUTH_PASSWORD = os.getenv('AUTH_PASSWORD', 'FsFinance2024$')
 
 def create_summary_data(df: pd.DataFrame, group_by_first: str, group_by_second: str, exchange_rate: float) -> List[Dict]:
     # Group by specified columns and sum the amounts
@@ -400,5 +407,32 @@ async def get_month_data(month_key: str):
         return JSONResponse(
             status_code=500,
             content={"error": str(e)},
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+
+# Add this class for the login request body
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@app.post("/auth/login")
+async def login(credentials: LoginRequest):
+    try:
+        if credentials.email == AUTH_EMAIL and credentials.password == AUTH_PASSWORD:
+            return JSONResponse(
+                content={"success": True},
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+        else:
+            return JSONResponse(
+                status_code=401,
+                content={"success": False, "error": "Invalid credentials"},
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": "Internal server error"},
             headers={"Access-Control-Allow-Origin": "*"}
         )
