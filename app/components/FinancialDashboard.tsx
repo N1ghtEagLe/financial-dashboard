@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react'
 import FileUpload from './FileUpload'
 import FinancialTreemap from './FinancialTreemap'
 
-type SummaryData = {
+export type SummaryData = {
   Team: string
   Category: string
   USD: number
@@ -13,7 +13,7 @@ type SummaryData = {
   'Total USD': number
 }
 
-type RawTransaction = {
+export type RawTransaction = {
   Date: string
   Description: string
   Amount: number
