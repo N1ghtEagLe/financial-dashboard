@@ -40,8 +40,10 @@ app.add_middleware(
 port = os.getenv("PORT", "8080")
 logger.info(f"Starting server on port: {port}")
 
-INITIAL_DATA_PATH = Path(__file__).parent / "october_2024.xlsx"
-logger.info(f"Looking for Excel file at: {INITIAL_DATA_PATH}")
+INITIAL_DATA_FILES = [
+    Path(__file__).parent / "october_2024.xlsx",
+    Path(__file__).parent / "November_2024.xlsx"
+]
 
 AUTH_EMAIL = os.getenv('AUTH_EMAIL', 'finance@foresight.works')
 AUTH_PASSWORD = os.getenv('AUTH_PASSWORD', 'FsFinance2024$')
@@ -283,16 +285,16 @@ async def get_initial_data():
         
         logger.info("No data in Redis, checking Excel file")
         # If no Redis data, process Excel and save to Redis
-        if not INITIAL_DATA_PATH.exists():
-            logger.error(f"Excel file not found at path: {INITIAL_DATA_PATH}")
+        if not INITIAL_DATA_FILES[0].exists():
+            logger.error(f"Excel file not found at path: {INITIAL_DATA_FILES[0]}")
             return JSONResponse(
                 status_code=404,
                 content={"error": "Initial data not found"},
                 headers={"Access-Control-Allow-Origin": "*"}
             )
         
-        logger.info(f"Excel file found, size: {INITIAL_DATA_PATH.stat().st_size} bytes")
-        with open(INITIAL_DATA_PATH, "rb") as f:
+        logger.info(f"Excel file found, size: {INITIAL_DATA_FILES[0].stat().st_size} bytes")
+        with open(INITIAL_DATA_FILES[0], "rb") as f:
             contents = f.read()
             logger.info(f"Read {len(contents)} bytes from Excel file")
         
@@ -451,3 +453,24 @@ async def login(credentials: LoginRequest):
                 "Access-Control-Allow-Headers": "Content-Type",
             }
         )
+
+@app.on_event("startup")
+async def load_initial_data():
+    """Load initial data files on startup"""
+    for file_path in INITIAL_DATA_FILES:
+        logger.info(f"Looking for Excel file at: {file_path}")
+        if file_path.exists():
+            try:
+                df = pd.read_excel(file_path)
+                month_key = file_path.stem.lower()  # Gets filename without extension
+                
+                # Process the data similar to your existing process endpoint
+                processed_data = process_excel_data(df)
+                
+                # Store in Redis
+                redis_service.store_data(month_key, processed_data)
+                logger.info(f"Successfully loaded initial data from {file_path}")
+            except Exception as e:
+                logger.error(f"Failed to load {file_path}: {str(e)}")
+        else:
+            logger.warning(f"Initial data file not found: {file_path}")
