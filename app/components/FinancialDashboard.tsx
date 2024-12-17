@@ -81,6 +81,11 @@ export default function FinancialDashboard() {
   const [availableMonths, setAvailableMonths] = useState<string[]>([])
   const [selectedMonth, setSelectedMonth] = useState<string>("")
 
+  useEffect(() => {
+    console.log("Dashboard mounted, fetching available months...")
+    fetchAvailableMonths()
+  }, [])
+
   const fetchAvailableMonths = async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/available-months`)
@@ -90,9 +95,11 @@ export default function FinancialDashboard() {
       setAvailableMonths(data.months)
       if (data.months.length > 0 && !selectedMonth) {
         setSelectedMonth(data.months[0])
+        await loadMonthData(data.months[0])
       }
     } catch (error) {
       console.error('Error fetching months:', error)
+      setError('Failed to load available months')
     }
   }
 
