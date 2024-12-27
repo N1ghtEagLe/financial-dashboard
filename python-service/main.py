@@ -461,15 +461,22 @@ async def load_initial_data():
         logger.info(f"Looking for Excel file at: {file_path}")
         if file_path.exists():
             try:
-                df = pd.read_excel(file_path)
+                # Read file as bytes instead of DataFrame
+                with open(file_path, 'rb') as f:
+                    contents = f.read()
+                
                 month_key = file_path.stem.lower()  # Gets filename without extension
+                logger.info(f"Processing {month_key}")
                 
-                # Process the data similar to your existing process endpoint
-                processed_data = process_excel_data(df)
+                # Process the data
+                result = process_excel_data(contents)
                 
-                # Store in Redis
-                redis_service.store_data(month_key, processed_data)
-                logger.info(f"Successfully loaded initial data from {file_path}")
+                # Store in Redis using the correct method
+                if redis_service.save_data(result, month_key):
+                    logger.info(f"Successfully loaded initial data from {file_path}")
+                else:
+                    logger.error(f"Failed to save data to Redis for {file_path}")
+                    
             except Exception as e:
                 logger.error(f"Failed to load {file_path}: {str(e)}")
         else:
