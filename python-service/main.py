@@ -42,7 +42,8 @@ logger.info(f"Starting server on port: {port}")
 
 INITIAL_DATA_FILES = [
     Path(__file__).parent / "october_2024.xlsx",
-    Path(__file__).parent / "November_2024.xlsx"
+    Path(__file__).parent / "November_2024.xlsx",
+    Path(__file__).parent / "December_2024.xlsx"
 ]
 
 AUTH_EMAIL = os.getenv('AUTH_EMAIL', 'finance@foresight.works')
