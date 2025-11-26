@@ -40,10 +40,9 @@ app.add_middleware(
 port = os.getenv("PORT", "8080")
 logger.info(f"Starting server on port: {port}")
 
+DEFAULT_MONTH_KEY = "october_2025"
 INITIAL_DATA_FILES = [
-    Path(__file__).parent / "october_2024.xlsx",
-    Path(__file__).parent / "November_2024.xlsx",
-    Path(__file__).parent / "December_2024.xlsx"
+    Path(__file__).parent / "October_2025.xlsx"
 ]
 
 AUTH_EMAIL = os.getenv('AUTH_EMAIL', 'finance@foresight.works')
@@ -276,7 +275,7 @@ async def get_initial_data():
     try:
         # First try to get data from Redis
         logger.info("Attempting to get data from Redis")
-        redis_data = redis_service.get_data("october_2024")  # Specify the default month
+        redis_data = redis_service.get_data(DEFAULT_MONTH_KEY)  # Specify the default month
         if redis_data:
             logger.info("Data retrieved from Redis successfully")
             return JSONResponse(
@@ -304,7 +303,7 @@ async def get_initial_data():
         
         # Save to Redis with specific month key
         logger.info("Saving processed data to Redis")
-        if redis_service.save_data(result, "october_2024"):
+        if redis_service.save_data(result, DEFAULT_MONTH_KEY):
             logger.info("Data saved to Redis successfully")
         else:
             logger.warning("Failed to save data to Redis")
